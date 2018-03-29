@@ -8,7 +8,7 @@ function start () {
     // get the canvas and make an OpenGL context
     // check for errors
     var canvas = document.getElementById("mycanvas");
-    if(canvas == null){
+    if(!canvas){
         alert("No element with id \"mycanvas\"");
         return;
     }
@@ -16,21 +16,16 @@ function start () {
     if (!gl) {
         alert("Unable to initialize WebGL. Your browser or machine may not support it.");
         return;
-      }
-
+    }
     // get GLSL code
     // check for errors
-    var vertexSource = document.getElementById("vertexShader").text;
-    if(vertexSource == null){
-        alert("No element with id \"vertexShader\"");
+    try {
+        var vertexSource = document.getElementById("vertexShader").text;
+        var fragmentSource = document.getElementById("fragmentShader").text;
+    } catch (error) {
+        alert(error);
         return;
     }
-    var fragmentSource = document.getElementById("fragmentShader").text;
-    if(fragmentSource == null){
-        alert("No element with id \"fragmentShader\"");
-        return;
-    }
-
     // compile the vertex shader
     var vertexShader = gl.createShader(gl.VERTEX_SHADER);
 }
