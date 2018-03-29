@@ -46,4 +46,19 @@ function start () {
         alert("error setting source code of the fragment shader.\n");
         return;
     }
+    // create shaderProgram
+    // attach shaders and link program
+    var shaderProgram = gl.createProgram();
+    if (!shaderProgram) {
+        alert("error, gl.createProgram() returned 0");
+        return;
+    }
+    gl.attachShader(shaderProgram, vertexShader);
+    gl.attachShader(shaderProgram, fragmentShader);
+    gl.linkProgram(shaderProgram);
+    if (!gl.getProgramParameter(shaderProgram, gl.LINK_STATUS)) {
+      alert("error attaching and linking shaders");
+      return;
+    }
+
 }
