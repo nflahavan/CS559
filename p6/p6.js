@@ -23,9 +23,27 @@ function start () {
         var vertexSource = document.getElementById("vertexShader").text;
         var fragmentSource = document.getElementById("fragmentShader").text;
     } catch (error) {
-        alert(error);
+        alert("Getting GLSL code.\n" + error);
         return;
     }
-    // compile the vertex shader
+    // create the shaders
     var vertexShader = gl.createShader(gl.VERTEX_SHADER);
+    var fragmentShader = gl.createShader(gl.FRAGMENT_SHADER);
+    if (!vertexShader || !fragmentShader) {
+        alert("gl.createShader(shaderType) returned 0.  Error occured while creating shader.");
+    }
+    // set source code of the shaders.
+    // compile the shaders
+    gl.shaderSource(vertexShader, vertexSource);
+    gl.compileShader(vertexShader);
+    if(!gl.getShaderParameter(vertexShader, gl.COMPILE_STATUS)) {
+        alert("error setting source code of the vertex shader.\n");
+        return;
+    }
+    gl.shaderSource(fragmentShader, fragmentSource);
+    gl.compileShader(fragmentShader);
+    if(!gl.getShaderParameter(fragmentShader, gl.COMPILE_STATUS)) {
+        alert("error setting source code of the fragment shader.\n");
+        return;
+    }
 }
