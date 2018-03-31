@@ -60,5 +60,17 @@ function start () {
       alert("error attaching and linking shaders");
       return;
     }
+    //set up attribute communication
+    var posAttributeIndex = gl.getAttribLocation(shaderProgram, "pos");
+    if(posAttributeIndex == -1) {
+        alert("error getting attribute location.");
+        return;
+    }
+    gl.enableVertexAttribArray(posAttributeIndex);
+    if(gl.getError() != gl.NO_ERROR) {
+        alert("error enabling attribute");
+        return;
+    }
 
+    
 }
