@@ -60,7 +60,7 @@ function start () {
       alert("error attaching and linking shaders");
       return;
     }
-    //set up attribute communication
+    // set up attribute communication
     var posAttributeIndex = gl.getAttribLocation(shaderProgram, "pos");
     if(posAttributeIndex == -1) {
         alert("error getting attribute location.");
@@ -71,6 +71,15 @@ function start () {
         alert("error enabling attribute");
         return;
     }
+    // vertex positions in object space
+    var vertexPos = [
+        0.0, 1.0, 0.0,
+        -1.0, -1.0, 0.0,
+        1.0,  -1.0, 0.0
+    ]
+
+    // put vertices into a buffer
+    // so that they can be block transferred to the graphics hardware
 
     
 }
