@@ -80,6 +80,12 @@ function start () {
 
     // put vertices into a buffer
     // so that they can be block transferred to the graphics hardware
-
-    
+    var trianglePosBuffer = gl.createBuffer();
+    try {
+        gl.bindBuffer(gl.ARRAY_BUFFER, trianglePosBuffer);
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertexPos), gl.STATIC_DRAW);
+    } catch (error) {
+        alert("error binding buffer.  only one target can be bound to a given buffer.  a buffer marked for deletion cannot be rebound.  both operations will result in an INVALID_OPERATION exeption being thrown.");
+        return;
+    }
 }
