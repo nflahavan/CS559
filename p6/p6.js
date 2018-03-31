@@ -88,4 +88,21 @@ function start () {
         alert("error binding buffer.  only one target can be bound to a given buffer.  a buffer marked for deletion cannot be rebound.  both operations will result in an INVALID_OPERATION exeption being thrown.");
         return;
     }
+    // ready to draw
+    // this is the "draw scene" function, but since this 
+    // is execute once...
+  
+	// first, let's clear the screen
+    gl.clearColor(0.0, 0.0, 0.0, 1.0);
+    gl.enable(gl.DEPTH_TEST);
+	gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+
+    // now we draw the triangle
+    // we tell GL what program to use, and what memory block
+    // to use for the data, and that the data goes to the pos
+    // attribute
+    gl.useProgram(shaderProgram);	    
+    gl.bindBuffer(gl.ARRAY_BUFFER, trianglePosBuffer);
+    gl.vertexAttribPointer(posAttributeIndex, /*itemsize*/3, gl.FLOAT, false, 0, 0);
+    gl.drawArrays(gl.TRIANGLES, 0, /*numitems*/3);
 }
