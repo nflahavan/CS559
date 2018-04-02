@@ -3,6 +3,9 @@
     <head>
         <script id="vertexShader" type="not-js">
             attribute vec3 pos;
+            uniform mat3 normalMatrix;
+            uniform mat4 modelViewMatrix;
+            uniform mat4 projectionMatrix;
             void main(void) {
                 gl_Position = vec4(pos, 1.0);
             }

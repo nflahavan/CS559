@@ -6,17 +6,20 @@
 function start () {
     "use strict";
     // get the canvas and make an OpenGL context
+    // get the sliders
     // check for errors
     var canvas = document.getElementById("mycanvas");
-    if(!canvas){
-        alert("No element with id \"mycanvas\"");
-        return;
-    }
     var gl = canvas.getContext("webgl");
-    if (!gl) {
-        alert("Unable to initialize WebGL. Your browser or machine may not support it.");
+    var slider1 = document.getElementById('slider1');
+    var slider2 = document.getElementById('slider2');
+    if(!canvas || !gl || !slider1 || !slider2){
+        alert("error prepping canvas and sliders");
         return;
     }
+    // prep twgl vars
+    // check for errors? as of right now no.
+    var m4 = twgl.m4;
+    var v3 = twgl.v3;
     // get GLSL code
     // check for errors
     try {
@@ -77,7 +80,6 @@ function start () {
         -1.0, -1.0, 0.0,
         1.0,  -1.0, 0.0
     ]
-
     // put vertices into a buffer
     // so that they can be block transferred to the graphics hardware
     var trianglePosBuffer = gl.createBuffer();
@@ -88,27 +90,31 @@ function start () {
         alert("error binding buffer.  only one target can be bound to a given buffer.  a buffer marked for deletion cannot be rebound.  both operations will result in an INVALID_OPERATION exeption being thrown.");
         return;
     }
-    // ready to draw
-	// first, let's clear the screen
-    gl.clearColor(0.0, 0.0, 0.0, 1.0);
-    gl.enable(gl.DEPTH_TEST);
-    try {
-	    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-    } catch (error) {
-        alert("error clearing.  mask is not one of the listed possible values");
-        return;
-    }
-    // now we draw the triangle
-    // we tell GL what program to use, and what memory block
-    // to use for the data, and that the data goes to the pos
-    // attribute
-    gl.useProgram(shaderProgram);	    
-    try {
-        gl.bindBuffer(gl.ARRAY_BUFFER, trianglePosBuffer);
-        gl.vertexAttribPointer(posAttributeIndex, /*itemsize*/3, gl.FLOAT, false, 0, 0);
-        gl.drawArrays(gl.TRIANGLES, 0, /*numitems*/3);
-    } catch (error) {
-        alert(error);
-        return;
+
+    draw();
+    function draw() {
+        // ready to draw
+        // first, let's clear the screen
+        gl.clearColor(0.0, 0.0, 0.0, 1.0);
+        gl.enable(gl.DEPTH_TEST);
+        try {
+            gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+        } catch (error) {
+            alert("error clearing.  mask is not one of the listed possible values");
+            return;
+        }
+        // now we draw the triangle
+        // we tell GL what program to use, and what memory block
+        // to use for the data, and that the data goes to the pos
+        // attribute
+        gl.useProgram(shaderProgram);	    
+        try {
+            gl.bindBuffer(gl.ARRAY_BUFFER, trianglePosBuffer);
+            gl.vertexAttribPointer(posAttributeIndex, /*itemsize*/3, gl.FLOAT, false, 0, 0);
+            gl.drawArrays(gl.TRIANGLES, 0, /*numitems*/3);
+        } catch (error) {
+            alert(error);
+            return;
+        }
     }
 }
