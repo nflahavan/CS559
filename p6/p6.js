@@ -64,34 +64,29 @@ function start () {
       return;
     }
     // set up attribute communication
-    var posAttributeIndex = gl.getAttribLocation(shaderProgram, "pos");
-    if(posAttributeIndex == -1) {
-        alert("error getting attribute location.");
-        return;
-    }
-    gl.enableVertexAttribArray(posAttributeIndex);
-    if(gl.getError() != gl.NO_ERROR) {
-        alert("error enabling attribute");
-        return;
-    }
-    // vertex positions in object space
-    var vertexPos = [
-        0.0, 1.0, 0.0,
-        -1.0, -1.0, 0.0,
-        1.0,  -1.0, 0.0
-    ]
-    // put vertices into a buffer
-    // so that they can be block transferred to the graphics hardware
-    var trianglePosBuffer = gl.createBuffer();
-    try {
-        gl.bindBuffer(gl.ARRAY_BUFFER, trianglePosBuffer);
-        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertexPos), gl.STATIC_DRAW);
-    } catch (error) {
-        alert("error binding buffer.  only one target can be bound to a given buffer.  a buffer marked for deletion cannot be rebound.  both operations will result in an INVALID_OPERATION exeption being thrown.");
-        return;
-    }
+    var indexOfAttributes = new Array(p6Data.attributes.length);
+    var attributeBuffers = new Array(indexOfAttributes.length);
+    setUpAttributeCommunication();
 
     draw();
+
+    function setUpAttributeCommunication() {
+        for (var i = 0; i < indexOfAttributes.length; i++) {
+            indexOfAttributes[i] = gl.getAttribLocation(shaderProgram, p6Data.attributes[i][0]);
+            if(indexOfAttributes[i] == -1) {
+                alert("error getting attribute location.");
+                return;
+            }
+            gl.enableVertexAttribArray(indexOfAttributes[i]);
+            if(gl.getError() != gl.NO_ERROR) {
+                alert("error enabling attribute");
+                return;
+            }
+            attributeBuffers[i] = gl.createBuffer();
+            gl.bindBuffer(gl.ARRAY_BUFFER, attributeBuffers[i]);
+            gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(p6Data.attributes[i][1]), gl.STATIC_DRAW);
+        }
+    }
     function draw() {
         // ready to draw
         // first, let's clear the screen
@@ -109,8 +104,8 @@ function start () {
         // attribute
         gl.useProgram(shaderProgram);	    
         try {
-            gl.bindBuffer(gl.ARRAY_BUFFER, trianglePosBuffer);
-            gl.vertexAttribPointer(posAttributeIndex, /*itemsize*/3, gl.FLOAT, false, 0, 0);
+            gl.bindBuffer(gl.ARRAY_BUFFER, attributeBuffers[0]);
+            gl.vertexAttribPointer(indexOfAttributes[0], /*itemsize*/3, gl.FLOAT, false, 0, 0);
             gl.drawArrays(gl.TRIANGLES, 0, /*numitems*/3);
         } catch (error) {
             alert(error);
