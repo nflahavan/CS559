@@ -126,10 +126,10 @@ function start () {
             gl.bindBuffer(gl.ARRAY_BUFFER, attributeBuffers[0]);
             gl.vertexAttribPointer(indexOfAttributes[0], /*itemsize*/3, gl.FLOAT, false, 0, 0);
             gl.bindBuffer(gl.ARRAY_BUFFER, attributeBuffers[1]);
-            gl.vertexAttribPointer(indexOfAttributes[0], /*itemsize*/3,gl.FLOAT,false, 0, 0);
+            gl.vertexAttribPointer(indexOfAttributes[1], /*itemsize*/3,gl.FLOAT,false, 0, 0);
 
             gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
-            gl.drawElements(gl.TRIANGLES, indexBuffer.length, gl.UNSIGNED_BYTE, 0);
+            gl.drawElements(gl.TRIANGLES, p6Data.indices.length, gl.UNSIGNED_BYTE, 0);
         } catch (error) {
             alert(error);
             return;
