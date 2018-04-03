@@ -2,17 +2,20 @@
 <html>
     <head>
         <script id="vertexShader" type="not-js">
-            attribute vec3 pos;
-            uniform mat3 normalMatrix;
-            uniform mat4 modelViewMatrix;
-            uniform mat4 projectionMatrix;
+            attribute vec3 vPos;
+            attribute vec3 vColor;
+            varying vec3 fColor;
+            uniform mat4 uMVP;
             void main(void) {
-                gl_Position = vec4(pos, 1.0);
+                gl_Position = uMVP*vec4(vPos, 1.0);
+                fColor = vColor;
             }
         </script>
         <script id="fragmentShader" type="not-js">
+            precision highp float;
+            varying vec3 fColor;
             void main(void) {
-                gl_FragColor = vec4(1.0, 1.0, 0.0, 1.0);
+                gl_FragColor = vec4(fColor, 1.0);
             }
         </script>
         <script src="http://graphics.cs.wisc.edu/JS/twgl-full.min.js"></script>

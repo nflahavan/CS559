@@ -5,9 +5,14 @@
 // written by Nik Flahavan on March 22, 2018
 function start () {
     "use strict";
-    // get the canvas and make an OpenGL context
-    // get the sliders
-    // check for errors
+    //
+    //
+    //
+    //
+    // prep twgl vars.  check for errors (CFE)? as of right now no.
+    var m4 = twgl.m4;
+    var v3 = twgl.v3;
+    // Get the canvas and make an OpenGL context. Get the sliders. CFE.
     var canvas = document.getElementById("mycanvas");
     var gl = canvas.getContext("webgl");
     var slider1 = document.getElementById('slider1');
@@ -16,12 +21,9 @@ function start () {
         alert("error prepping canvas and sliders");
         return;
     }
-    // prep twgl vars
-    // check for errors? as of right now no.
-    var m4 = twgl.m4;
-    var v3 = twgl.v3;
-    // get GLSL code
-    // check for errors
+    slider1.value = 0;
+    slider2.value = 0;
+    // get GLSL code. CFE.
     try {
         var vertexSource = document.getElementById("vertexShader").text;
         var fragmentSource = document.getElementById("fragmentShader").text;
@@ -29,14 +31,13 @@ function start () {
         alert("Getting GLSL code.\n" + error);
         return;
     }
-    // create the shaders
+    // create the shaders. CFE.
     var vertexShader = gl.createShader(gl.VERTEX_SHADER);
     var fragmentShader = gl.createShader(gl.FRAGMENT_SHADER);
     if (!vertexShader || !fragmentShader) {
         alert("gl.createShader(shaderType) returned 0.  Error occured while creating shader.");
     }
-    // set source code of the shaders.
-    // compile the shaders
+    // set source code of the shaders. Compile shaders and CFE.
     gl.shaderSource(vertexShader, vertexSource);
     gl.compileShader(vertexShader);
     if(!gl.getShaderParameter(vertexShader, gl.COMPILE_STATUS)) {
@@ -49,8 +50,7 @@ function start () {
         alert("error setting source code of the fragment shader.\n");
         return;
     }
-    // create shaderProgram
-    // attach shaders and link program
+    // create shaderProgram. Attach shaders, link program and CFE.
     var shaderProgram = gl.createProgram();
     if (!shaderProgram) {
         alert("error, gl.createProgram() returned 0");
@@ -63,11 +63,16 @@ function start () {
       alert("error attaching and linking shaders");
       return;
     }
+    gl.useProgram(shaderProgram);
+    //
+    //
+    //
+    //
     // set up attribute communication
     var indexOfAttributes = new Array(p6Data.attributes.length);
     var attributeBuffers = new Array(indexOfAttributes.length);
     setUpAttributeCommunication();
-
+    // ready for draw loop.
     draw();
 
     function setUpAttributeCommunication() {
@@ -87,26 +92,43 @@ function start () {
             gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(p6Data.attributes[i][1]), gl.STATIC_DRAW);
         }
     }
+    // this gives us access to the matrix uniform
+    shaderProgram.MVPmatrix = gl.getUniformLocation(shaderProgram,"uMVP");
+
+    // a buffer for indices
+    var indexBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
+    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, p6Data.indices, gl.STATIC_DRAW);    
+
     function draw() {
+        // translate slider values.
+        var angle1 = slider1.value*0.01*Math.PI;
+        var angle2 = slider2.value*0.01*Math.PI;
+        // set up matrix vars.
+        var eye = [400*Math.sin(angle1),150.0,400.0*Math.cos(angle1)];
+        var target = [0,0,0];
+        var up = [0,1,0];
+        // prep matrix.  Using Teacher's matrices for now...
+        var tModel1 = m4.multiply(m4.scaling([100,100,100]),m4.axisRotation([1,1,1],angle2));
+        var tCamera = m4.inverse(m4.lookAt(eye,target,up));
+        var tProjection = m4.perspective(Math.PI/3,1,10,1000);
+        var tMVP=m4.multiply(m4.multiply(tModel1,tCamera),tProjection);
         // ready to draw
         // first, let's clear the screen
         gl.clearColor(0.0, 0.0, 0.0, 1.0);
         gl.enable(gl.DEPTH_TEST);
-        try {
-            gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-        } catch (error) {
-            alert("error clearing.  mask is not one of the listed possible values");
-            return;
-        }
-        // now we draw the triangle
-        // we tell GL what program to use, and what memory block
-        // to use for the data, and that the data goes to the pos
-        // attribute
-        gl.useProgram(shaderProgram);	    
+        gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+        // set up uniforms and attributes
+        gl.uniformMatrix4fv(shaderProgram.MVPmatrix,false,tMVP);
+	    
         try {
             gl.bindBuffer(gl.ARRAY_BUFFER, attributeBuffers[0]);
             gl.vertexAttribPointer(indexOfAttributes[0], /*itemsize*/3, gl.FLOAT, false, 0, 0);
-            gl.drawArrays(gl.TRIANGLES, 0, /*numitems*/3);
+            gl.bindBuffer(gl.ARRAY_BUFFER, attributeBuffers[1]);
+            gl.vertexAttribPointer(indexOfAttributes[0], /*itemsize*/3,gl.FLOAT,false, 0, 0);
+
+            gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
+            gl.drawElements(gl.TRIANGLES, indexBuffer.length, gl.UNSIGNED_BYTE, 0);
         } catch (error) {
             alert(error);
             return;
