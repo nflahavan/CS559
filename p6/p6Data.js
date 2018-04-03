@@ -15,7 +15,10 @@ p6Data.attributes = [{name: "vPos",buffer: [  1, 1, 1,  -1, 1, 1,  -1,-1, 1,   1
                                 1, 0, 1,   1, 0, 1,   1, 0, 1,   1, 0, 1,
                                 0, 1, 1,   0, 1, 1,   0, 1, 1,   0, 1, 1
                                 ]
-                            }];
+                            },
+                    {name: "vNormal",buffer: []
+                            }
+                    ];
 p6Data.uniforms = ["uMVP","normalMatrix"];
 p6Data.indices = new Uint8Array(
     [  0, 1, 2,   0, 2, 3,    // front

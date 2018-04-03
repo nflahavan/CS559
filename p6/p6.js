@@ -10,6 +10,7 @@ function start () {
     //
     //
     // prep twgl vars.  check for errors (CFE)? as of right now no.
+    var p6 = p6Data;
     var m4 = twgl.m4;
     var v3 = twgl.v3;
     // Get the canvas and make an OpenGL context. Get the sliders. CFE.
@@ -66,6 +67,7 @@ function start () {
     gl.useProgram(shaderProgram);
     //
     // compute normals
+    computeNormalVectors(p6Data.indices);
     // compute normalMatrix
     //
     // set up attribute/matrix communication
@@ -86,18 +88,23 @@ function start () {
     slider2.addEventListener("input",draw);
     draw();
 
-    // function computeNormalVectors (triangles) {
-    //     for (var i=0; i < triangles.length; i+=3) {
-    //         // get the points
-    //         var point1 = p6Data.attributes[0][1][triangles[i]];
-    //         var point2 = p6Data.attributes[0][1][triangles[i+1]];
-    //         var point3 = p6Data.attributes[0][1][triangles[i+2]];
-    //         // compute the normal
-    //         var vector1 = v3.subtract(point1,point2);
-    //         var vector2 = v3.subtract(point1,point3);
-    //         var normalVector = v3.normalize(v3.cross(e1,e2));
-    //     }
-    // }
+    function computeNormalVectors (triangles) {
+        // get the coordinates
+        var coordinates = p6Data.attributes[0].buffer;
+        for (var i=0; i < triangles.length; i+=9) {
+            // get the points
+            var point1 = v3.create(coordinates[i],coordinates[i+1],coordinates[i+2]);
+            var point2 = v3.create(coordinates[i+3],coordinates[i+4],coordinates[i+5]);
+            var point3 = v3.create(coordinates[i+6],coordinates[i+7],coordinates[i+8]);
+            // compute the normal
+            var vector1 = v3.subtract(point1,point2);
+            var vector2 = v3.subtract(point1,point3);
+            var normalVector = v3.normalize(v3.cross(vector1,vector2));
+            p6Data.attributes[2].buffer.push(normalVector);
+            p6Data.attributes[2].buffer.push(normalVector);
+            p6Data.attributes[2].buffer.push(normalVector);
+        }
+    }
     function setUpAttributeCommunication() {
         for (var i = 0; i < indexOfAttributes.length; i++) {
             indexOfAttributes[i] = gl.getAttribLocation(shaderProgram, p6Data.attributes[i].name);
