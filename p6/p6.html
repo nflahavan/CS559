@@ -5,7 +5,9 @@
         <script id="vertexShader" type="not-js">
             attribute vec3 vPos;
             attribute vec3 vColor;
+            attribute vec3 vNormal;
             varying vec3 fColor;
+            varying vec3 fNormal;
             uniform mat4 uMVP;
             void main(void) {
                 fColor = vColor;
@@ -15,6 +17,7 @@
         <script id="fragmentShader" type="not-js">
             precision highp float;
             varying vec3 fColor;
+            varying vec3 fNormal;
             void main(void) {
                 gl_FragColor = vec4(fColor, 1.0);
             }

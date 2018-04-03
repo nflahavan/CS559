@@ -65,10 +65,10 @@ function start () {
     }
     gl.useProgram(shaderProgram);
     //
+    // compute normals
+    // compute normalMatrix
     //
-    //
-    //
-    // set up attribute communication
+    // set up attribute/matrix communication
     var indexOfAttributes = new Array(p6Data.attributes.length);
     var attributeBuffers = new Array(indexOfAttributes.length);
     setUpAttributeCommunication();
@@ -82,11 +82,25 @@ function start () {
     gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, p6Data.indices, gl.STATIC_DRAW);   
 
     // ready for draw loop.
+    slider1.addEventListener("input",draw);
+    slider2.addEventListener("input",draw);
     draw();
 
+    // function computeNormalVectors (triangles) {
+    //     for (var i=0; i < triangles.length; i+=3) {
+    //         // get the points
+    //         var point1 = p6Data.attributes[0][1][triangles[i]];
+    //         var point2 = p6Data.attributes[0][1][triangles[i+1]];
+    //         var point3 = p6Data.attributes[0][1][triangles[i+2]];
+    //         // compute the normal
+    //         var vector1 = v3.subtract(point1,point2);
+    //         var vector2 = v3.subtract(point1,point3);
+    //         var normalVector = v3.normalize(v3.cross(e1,e2));
+    //     }
+    // }
     function setUpAttributeCommunication() {
         for (var i = 0; i < indexOfAttributes.length; i++) {
-            indexOfAttributes[i] = gl.getAttribLocation(shaderProgram, p6Data.attributes[i][0]);
+            indexOfAttributes[i] = gl.getAttribLocation(shaderProgram, p6Data.attributes[i].name);
             if(indexOfAttributes[i] == -1) {
                 alert("error getting attribute location.");
                 return;
@@ -98,7 +112,7 @@ function start () {
             }
             attributeBuffers[i] = gl.createBuffer();
             gl.bindBuffer(gl.ARRAY_BUFFER, attributeBuffers[i]);
-            gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(p6Data.attributes[i][1]), gl.STATIC_DRAW);
+            gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(p6Data.attributes[i].buffer), gl.STATIC_DRAW);
         }
     } 
     function draw() {
@@ -134,5 +148,6 @@ function start () {
             alert(error);
             return;
         }
+
     }
 }
