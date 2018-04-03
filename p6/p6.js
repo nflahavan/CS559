@@ -72,6 +72,15 @@ function start () {
     var indexOfAttributes = new Array(p6Data.attributes.length);
     var attributeBuffers = new Array(indexOfAttributes.length);
     setUpAttributeCommunication();
+
+    // this gives us access to the matrix uniform
+    shaderProgram.MVPmatrix = gl.getUniformLocation(shaderProgram,"uMVP");
+
+    // a buffer for indices
+    var indexBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
+    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, p6Data.indices, gl.STATIC_DRAW);   
+
     // ready for draw loop.
     draw();
 
@@ -91,15 +100,7 @@ function start () {
             gl.bindBuffer(gl.ARRAY_BUFFER, attributeBuffers[i]);
             gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(p6Data.attributes[i][1]), gl.STATIC_DRAW);
         }
-    }
-    // this gives us access to the matrix uniform
-    shaderProgram.MVPmatrix = gl.getUniformLocation(shaderProgram,"uMVP");
-
-    // a buffer for indices
-    var indexBuffer = gl.createBuffer();
-    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
-    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, p6Data.indices, gl.STATIC_DRAW);    
-
+    } 
     function draw() {
         // translate slider values.
         var angle1 = slider1.value*0.01*Math.PI;
