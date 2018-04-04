@@ -76,7 +76,9 @@ function start () {
     setUpAttributeCommunication();
 
     // this gives us access to the matrix uniform
-    shaderProgram.MVPmatrix = gl.getUniformLocation(shaderProgram,"uMVP");
+    shaderProgram.MVPmatrix = gl.getUniformLocation(shaderProgram,"modelViewMatrix");
+    shaderProgram.MVPmatrix = gl.getUniformLocation(shaderProgram,"projectionMatrix");
+    shaderProgram.normalMatrix = gl.getUniformLocation(shaderProgram,"normalMatrix");
 
     // a buffer for indices
     var indexBuffer = gl.createBuffer();
@@ -91,18 +93,21 @@ function start () {
     function computeNormalVectors (triangles) {
         // get the coordinates
         var coordinates = p6Data.attributes[0].buffer;
-        for (var i=0; i < triangles.length; i+=9) {
+        for (var i=0; i < coordinates.length; i+=9) {
             // get the points
-            var point1 = v3.create(coordinates[i],coordinates[i+1],coordinates[i+2]);
-            var point2 = v3.create(coordinates[i+3],coordinates[i+4],coordinates[i+5]);
-            var point3 = v3.create(coordinates[i+6],coordinates[i+7],coordinates[i+8]);
+            var point1 = [coordinates[i],coordinates[i+1],coordinates[i+2]];
+            var point2 = [coordinates[i+3],coordinates[i+4],coordinates[i+5]];
+            var point3 = [coordinates[i+6],coordinates[i+7],coordinates[i+8]];
             // compute the normal
             var vector1 = v3.subtract(point1,point2);
             var vector2 = v3.subtract(point1,point3);
             var normalVector = v3.normalize(v3.cross(vector1,vector2));
-            p6Data.attributes[2].buffer.push(normalVector);
-            p6Data.attributes[2].buffer.push(normalVector);
-            p6Data.attributes[2].buffer.push(normalVector);
+            for (var j=0; j<3;j++) {
+                p6Data.attributes[2].buffer.push(normalVector[0]);
+                p6Data.attributes[2].buffer.push(normalVector[1]);
+                p6Data.attributes[2].buffer.push(normalVector[2]);
+                
+            }
         }
     }
     function setUpAttributeCommunication() {
@@ -134,20 +139,31 @@ function start () {
         var tModel1 = m4.multiply(m4.scaling([100,100,100]),m4.axisRotation([1,1,1],angle2));
         var tCamera = m4.inverse(m4.lookAt(eye,target,up));
         var tProjection = m4.perspective(Math.PI/3,1,10,1000);
-        var tMVP=m4.multiply(m4.multiply(tModel1,tCamera),tProjection);
+        var tNormal = m4.transpose(m4.inverse(tCamera));
+        tNormal.splice(3,1);
+        tNormal.splice(7,1);
+        tNormal.splice(11,1);
+        tNormal.splice(12,1);
+        tNormal.splice(13,1);
+        tNormal.splice(14,1);
+        tNormal.splice(15,1);
         // ready to draw
         // first, let's clear the screen
         gl.clearColor(0.0, 0.0, 0.0, 1.0);
         gl.enable(gl.DEPTH_TEST);
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
         // set up uniforms and attributes
-        gl.uniformMatrix4fv(shaderProgram.MVPmatrix,false,tMVP);
+        gl.uniformMatrix4fv(shaderProgram.modelViewMatrix,false,tCamera);
+        gl.uniformMatrix4fv(shaderProgram.projectionMatrix,false,tProjection);
+        gl.uniformMatrix3fv(shaderProgram.normalMatrix,false,tNormal);
 	    
         try {
             gl.bindBuffer(gl.ARRAY_BUFFER, attributeBuffers[0]);
             gl.vertexAttribPointer(indexOfAttributes[0], /*itemsize*/3, gl.FLOAT, false, 0, 0);
             gl.bindBuffer(gl.ARRAY_BUFFER, attributeBuffers[1]);
             gl.vertexAttribPointer(indexOfAttributes[1], /*itemsize*/3,gl.FLOAT,false, 0, 0);
+            gl.bindBuffer(gl.ARRAY_BUFFER, attributeBuffers[2]);
+            gl.vertexAttribPointer(indexOfAttributes[2], /*itemsize*/3,gl.FLOAT,false, 0, 0);
 
             gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
             gl.drawElements(gl.TRIANGLES, p6Data.indices.length, gl.UNSIGNED_BYTE, 0);

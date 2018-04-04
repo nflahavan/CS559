@@ -1,6 +1,6 @@
 var p6Data = new Object();
                     /*object-space position coordinates*/
-p6Data.attributes = [{name: "vPos",buffer: [  1, 1, 1,  -1, 1, 1,  -1,-1, 1,   1,-1, 1,
+p6Data.attributes = [{name: "position",buffer: [  1, 1, 1,  -1, 1, 1,  -1,-1, 1,   1,-1, 1,
                                 1, 1, 1,   1,-1, 1,   1,-1,-1,   1, 1,-1,
                                 1, 1, 1,   1, 1,-1,  -1, 1,-1,  -1, 1, 1,
                                 -1, 1, 1,  -1, 1,-1,  -1,-1,-1,  -1,-1, 1,
@@ -16,7 +16,7 @@ p6Data.attributes = [{name: "vPos",buffer: [  1, 1, 1,  -1, 1, 1,  -1,-1, 1,   1
                                 0, 1, 1,   0, 1, 1,   0, 1, 1,   0, 1, 1
                                 ]
                             },
-                    {name: "vNormal",buffer: []
+                    {name: "normal",buffer: []
                             }
                     ];
 p6Data.uniforms = ["uMVP","normalMatrix"];
