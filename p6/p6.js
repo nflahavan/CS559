@@ -76,8 +76,8 @@ function start () {
     setUpAttributeCommunication();
 
     // this gives us access to the matrix uniform
-    shaderProgram.MVPmatrix = gl.getUniformLocation(shaderProgram,"modelViewMatrix");
-    shaderProgram.MVPmatrix = gl.getUniformLocation(shaderProgram,"projectionMatrix");
+    shaderProgram.modelViewMatrix = gl.getUniformLocation(shaderProgram,"modelViewMatrix");
+    shaderProgram.projectionMatrix = gl.getUniformLocation(shaderProgram,"projectionMatrix");
     shaderProgram.normalMatrix = gl.getUniformLocation(shaderProgram,"normalMatrix");
 
     // a buffer for indices
@@ -138,22 +138,24 @@ function start () {
         // prep matrix.  Using Teacher's matrices for now...
         var tModel1 = m4.multiply(m4.scaling([100,100,100]),m4.axisRotation([1,1,1],angle2));
         var tCamera = m4.inverse(m4.lookAt(eye,target,up));
+        var tModelView = m4.multiply(tModel1,tCamera);
         var tProjection = m4.perspective(Math.PI/3,1,10,1000);
         var tNormal = m4.transpose(m4.inverse(tCamera));
+        tNormal =  Array.prototype.slice.call(tNormal);
         tNormal.splice(3,1);
-        tNormal.splice(7,1);
-        tNormal.splice(11,1);
-        tNormal.splice(12,1);
-        tNormal.splice(13,1);
-        tNormal.splice(14,1);
-        tNormal.splice(15,1);
+        tNormal.splice(6,1);
+        tNormal.splice(9,1);
+        tNormal.splice(9,1);
+        tNormal.splice(9,1);
+        tNormal.splice(9,1);
+        tNormal.splice(9,1);
         // ready to draw
         // first, let's clear the screen
         gl.clearColor(0.0, 0.0, 0.0, 1.0);
         gl.enable(gl.DEPTH_TEST);
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
         // set up uniforms and attributes
-        gl.uniformMatrix4fv(shaderProgram.modelViewMatrix,false,tCamera);
+        gl.uniformMatrix4fv(shaderProgram.modelViewMatrix,false,tModelView);
         gl.uniformMatrix4fv(shaderProgram.projectionMatrix,false,tProjection);
         gl.uniformMatrix3fv(shaderProgram.normalMatrix,false,tNormal);
 	    

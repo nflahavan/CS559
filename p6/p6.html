@@ -5,16 +5,17 @@
         <script id="vertexShader" type="not-js">
             precision highp float;
             attribute vec3 position;
-            attribute vec3 normal;
             attribute vec3 vColor;
+            attribute vec3 normal;
             uniform mat3 normalMatrix;
             uniform mat4 modelViewMatrix;
             uniform mat4 projectionMatrix;
             varying vec3 fNormal;
             varying vec3 fPosition;
-            
+            varying vec3 fColor;
             void main()
             {
+              fColor = vColor;
               fNormal = normalize(normalMatrix*normal);
               vec4 homogeneousPosition = modelViewMatrix*vec4(position,1.0);
               fPosition = (homogeneousPosition/homogeneousPosition.w).xyz;
@@ -25,7 +26,7 @@
             precision highp float;
             varying vec3 fPosition;
             varying vec3 fNormal;
-
+            varying vec3 fColor;
             const float ambientLightCoefficient = 0.1;
             const vec3 lightDirection = vec3(1.0,0.5,0.0);
             const vec3 objectColor = vec3(1.0,0.0,0.0); //red
@@ -34,16 +35,222 @@
             {
             vec3 normalizedLightDirection = normalize(lightDirection);
             vec3 surfaceNormal = normalize(fNormal);
-            float diffuseLight = max(dot(fNormal,normalizedLightDirection),0.0);
+            float diffuseLight = max(dot(surfaceNormal,normalizedLightDirection),0.0);
             float totalLight = ambientLightCoefficient+diffuseLight;
-            gl_FragColor = vec4(totalLight*objectColor, 1.0);
+            gl_FragColor = vec4(totalLight*fColor, 1.0);
             }
         </script>
         <script src="http://graphics.cs.wisc.edu/JS/twgl-full.min.js"></script>
-        <script src='file:///Users/kathleengracehollman1/Documents/NikHomework/CS559/p6/p6.js'></script>
-        <script src='file:///Users/kathleengracehollman1/Documents/NikHomework/CS559/p6/p6Data.js'></script>
-        <script src='file:///Users/nikflahavan/Documents/Homework/CS559/p6/p6.js'></script>
-        <script src='file:///Users/nikflahavan/Documents/Homework/CS559/p6/p6Data.js'></script>
+        <script>
+        // p6 1.0
+// draw a triangle using WebGL
+// based on examples given in class
+//
+// written by Nik Flahavan on March 22, 2018
+function start () {
+    "use strict";
+    //
+    //
+    //
+    //
+    // prep twgl vars.  check for errors (CFE)? as of right now no.
+    var p6 = p6Data;
+    var m4 = twgl.m4;
+    var v3 = twgl.v3;
+    // Get the canvas and make an OpenGL context. Get the sliders. CFE.
+    var canvas = document.getElementById("mycanvas");
+    var gl = canvas.getContext("webgl");
+    var slider1 = document.getElementById('slider1');
+    var slider2 = document.getElementById('slider2');
+    if(!canvas || !gl || !slider1 || !slider2){
+        alert("error prepping canvas and sliders");
+        return;
+    }
+    slider1.value = 0;
+    slider2.value = 0;
+    // get GLSL code. CFE.
+    try {
+        var vertexSource = document.getElementById("vertexShader").text;
+        var fragmentSource = document.getElementById("fragmentShader").text;
+    } catch (error) {
+        alert("Getting GLSL code.\n" + error);
+        return;
+    }
+    // create the shaders. CFE.
+    var vertexShader = gl.createShader(gl.VERTEX_SHADER);
+    var fragmentShader = gl.createShader(gl.FRAGMENT_SHADER);
+    if (!vertexShader || !fragmentShader) {
+        alert("gl.createShader(shaderType) returned 0.  Error occured while creating shader.");
+    }
+    // set source code of the shaders. Compile shaders and CFE.
+    gl.shaderSource(vertexShader, vertexSource);
+    gl.compileShader(vertexShader);
+    if(!gl.getShaderParameter(vertexShader, gl.COMPILE_STATUS)) {
+        alert("error setting source code of the vertex shader.\n");
+        return;
+    }
+    gl.shaderSource(fragmentShader, fragmentSource);
+    gl.compileShader(fragmentShader);
+    if(!gl.getShaderParameter(fragmentShader, gl.COMPILE_STATUS)) {
+        alert("error setting source code of the fragment shader.\n");
+        return;
+    }
+    // create shaderProgram. Attach shaders, link program and CFE.
+    var shaderProgram = gl.createProgram();
+    if (!shaderProgram) {
+        alert("error, gl.createProgram() returned 0");
+        return;
+    }
+    gl.attachShader(shaderProgram, vertexShader);
+    gl.attachShader(shaderProgram, fragmentShader);
+    gl.linkProgram(shaderProgram);
+    if (!gl.getProgramParameter(shaderProgram, gl.LINK_STATUS)) {
+      alert("error attaching and linking shaders");
+      return;
+    }
+    gl.useProgram(shaderProgram);
+    //
+    // compute normals
+    computeNormalVectors(p6Data.indices);
+    // compute normalMatrix
+    //
+    // set up attribute/matrix communication
+    var indexOfAttributes = new Array(p6Data.attributes.length);
+    var attributeBuffers = new Array(indexOfAttributes.length);
+    setUpAttributeCommunication();
+
+    // this gives us access to the matrix uniform
+    shaderProgram.modelViewMatrix = gl.getUniformLocation(shaderProgram,"modelViewMatrix");
+    shaderProgram.projectionMatrix = gl.getUniformLocation(shaderProgram,"projectionMatrix");
+    shaderProgram.normalMatrix = gl.getUniformLocation(shaderProgram,"normalMatrix");
+
+    // a buffer for indices
+    var indexBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
+    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, p6Data.indices, gl.STATIC_DRAW);   
+
+    // ready for draw loop.
+    slider1.addEventListener("input",draw);
+    slider2.addEventListener("input",draw);
+    draw();
+
+    function computeNormalVectors (triangles) {
+        // get the coordinates
+        var coordinates = p6Data.attributes[0].buffer;
+        for (var i=0; i < coordinates.length; i+=9) {
+            // get the points
+            var point1 = [coordinates[i],coordinates[i+1],coordinates[i+2]];
+            var point2 = [coordinates[i+3],coordinates[i+4],coordinates[i+5]];
+            var point3 = [coordinates[i+6],coordinates[i+7],coordinates[i+8]];
+            // compute the normal
+            var vector1 = v3.subtract(point1,point2);
+            var vector2 = v3.subtract(point1,point3);
+            var normalVector = v3.normalize(v3.cross(vector1,vector2));
+            for (var j=0; j<3;j++) {
+                p6Data.attributes[2].buffer.push(normalVector[0]);
+                p6Data.attributes[2].buffer.push(normalVector[1]);
+                p6Data.attributes[2].buffer.push(normalVector[2]);
+                
+            }
+        }
+    }
+    function setUpAttributeCommunication() {
+        for (var i = 0; i < indexOfAttributes.length; i++) {
+            indexOfAttributes[i] = gl.getAttribLocation(shaderProgram, p6Data.attributes[i].name);
+            if(indexOfAttributes[i] == -1) {
+                alert("error getting attribute location.");
+                return;
+            }
+            gl.enableVertexAttribArray(indexOfAttributes[i]);
+            if(gl.getError() != gl.NO_ERROR) {
+                alert("error enabling attribute");
+                return;
+            }
+            attributeBuffers[i] = gl.createBuffer();
+            gl.bindBuffer(gl.ARRAY_BUFFER, attributeBuffers[i]);
+            gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(p6Data.attributes[i].buffer), gl.STATIC_DRAW);
+        }
+    } 
+    function draw() {
+        // translate slider values.
+        var angle1 = slider1.value*0.01*Math.PI;
+        var angle2 = slider2.value*0.01*Math.PI;
+        // set up matrix vars.
+        var eye = [400*Math.sin(angle1),150.0,400.0*Math.cos(angle1)];
+        var target = [0,0,0];
+        var up = [0,1,0];
+        // prep matrix.  Using Teacher's matrices for now...
+        var tModel1 = m4.multiply(m4.scaling([100,100,100]),m4.axisRotation([1,1,1],angle2));
+        var tCamera = m4.inverse(m4.lookAt(eye,target,up));
+        var tModelView = m4.multiply(tModel1,tCamera);
+        var tProjection = m4.perspective(Math.PI/3,1,10,1000);
+        var tNormal = m4.transpose(m4.inverse(tCamera));
+        tNormal =  Array.prototype.slice.call(tNormal);
+        tNormal.splice(3,1);
+        tNormal.splice(6,1);
+        tNormal.splice(9,1);
+        tNormal.splice(9,1);
+        tNormal.splice(9,1);
+        tNormal.splice(9,1);
+        tNormal.splice(9,1);
+        // ready to draw
+        // first, let's clear the screen
+        gl.clearColor(0.0, 0.0, 0.0, 1.0);
+        gl.enable(gl.DEPTH_TEST);
+        gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+        // set up uniforms and attributes
+        gl.uniformMatrix4fv(shaderProgram.modelViewMatrix,false,tModelView);
+        gl.uniformMatrix4fv(shaderProgram.projectionMatrix,false,tProjection);
+        gl.uniformMatrix3fv(shaderProgram.normalMatrix,false,tNormal);
+	    
+        try {
+            gl.bindBuffer(gl.ARRAY_BUFFER, attributeBuffers[0]);
+            gl.vertexAttribPointer(indexOfAttributes[0], /*itemsize*/3, gl.FLOAT, false, 0, 0);
+            gl.bindBuffer(gl.ARRAY_BUFFER, attributeBuffers[1]);
+            gl.vertexAttribPointer(indexOfAttributes[1], /*itemsize*/3,gl.FLOAT,false, 0, 0);
+            gl.bindBuffer(gl.ARRAY_BUFFER, attributeBuffers[2]);
+            gl.vertexAttribPointer(indexOfAttributes[2], /*itemsize*/3,gl.FLOAT,false, 0, 0);
+
+            gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
+            gl.drawElements(gl.TRIANGLES, p6Data.indices.length, gl.UNSIGNED_BYTE, 0);
+        } catch (error) {
+            alert(error);
+            return;
+        }
+
+    }
+}
+
+var p6Data = new Object();
+                    /*object-space position coordinates*/
+p6Data.attributes = [{name: "position",buffer: [  1, 1, 1,  -1, 1, 1,  -1,-1, 1,   1,-1, 1,
+                                1, 1, 1,   1,-1, 1,   1,-1,-1,   1, 1,-1,
+                                1, 1, 1,   1, 1,-1,  -1, 1,-1,  -1, 1, 1,
+                                -1, 1, 1,  -1, 1,-1,  -1,-1,-1,  -1,-1, 1,
+                                -1,-1,-1,   1,-1,-1,   1,-1, 1,  -1,-1, 1,
+                                1,-1,-1,  -1,-1,-1,  -1, 1,-1,   1, 1,-1 
+                             ]
+                            },
+                    {name: "vColor",buffer: [0, 0, 1,   0, 0, 1,   0, 0, 1,   0, 0, 1,
+                                1, 0, 0,   1, 0, 0,   1, 0, 0,   1, 0, 0,
+                                0, 1, 0,   0, 1, 0,   0, 1, 0,   0, 1, 0,
+                                1, 1, 0,   1, 1, 0,   1, 1, 0,   1, 1, 0,
+                                1, 0, 1,   1, 0, 1,   1, 0, 1,   1, 0, 1,
+                                0, 1, 1,   0, 1, 1,   0, 1, 1,   0, 1, 1
+                                ]
+                            },
+                    {name: "normal",buffer: []
+                            }
+                    ];
+p6Data.uniforms = ["uMVP","normalMatrix"];
+p6Data.indices = new Uint8Array(
+    [  0, 1, 2,   0, 2, 3,    // front
+       4, 5, 6,   4, 6, 7,    // right
+       8, 9,10,   8,10,11,    // top
+      12,13,14,  12,14,15,    // left
+      16,17,18,  16,18,19,    // bottom
+      20,21,22,  20,22,23 ]); // back
+        </script>
     </head>
     <body onload="start()">
         <canvas id="mycanvas" width="500" height="500" style="border:1px solid #000000;"></canvas>
